@@ -372,10 +372,11 @@ if __name__ == '__main__':
 
                 roi_list, shape_list, x_y_list = pointer.mark_points(draw_on_img=True)
 
-                board = pointer.draw_circles_on_board(x_y_list, color=(0, 0, 255), radius=2)
-                board = pointer.connect_circles(x_y_list, color=(255, 255, 255), board=board, special_mouth=True,do_not_connect_lasts=["jaw", "nose", "mouth"])
-                board, (right_mean, left_mean) = pointer.find_eyes_center(x_y_list, color=(255, 255, 255), board=board)
-                board2 = pointer.special_connector(x_y_list, color=(255, 255, 255),board=pointer.show_image(justret=True).copy())
+                if len(x_y_list) != 1:
+                    board = pointer.draw_circles_on_board(x_y_list, color=(0, 0, 255), radius=2)
+                    board = pointer.connect_circles(x_y_list, color=(255, 255, 255), board=board, special_mouth=True,do_not_connect_lasts=["jaw", "nose", "mouth"])
+                    board, (right_mean, left_mean) = pointer.find_eyes_center(x_y_list, color=(255, 255, 255), board=board)
+                    board2 = pointer.special_connector(x_y_list, color=(255, 255, 255),board=pointer.show_image(justret=True).copy())
 
                 img = pointer.show_image(justret=True)
 
