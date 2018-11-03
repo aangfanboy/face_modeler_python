@@ -366,23 +366,24 @@ if __name__ == '__main__':
 
     def on_path(PATH):
         for img in os.listdir(PATH):
-            path_img = os.path.join(PATH,img)
-            pointer.set_image(path_img,width=500)
+            if img.endswith(".jpg") or img.endswith(".png"):
+                path_img = os.path.join(PATH,img)
+                pointer.set_image(path_img,width=500)
 
-            roi_list, shape_list, x_y_list = pointer.mark_points(draw_on_img=True)
+                roi_list, shape_list, x_y_list = pointer.mark_points(draw_on_img=True)
 
-            board = pointer.draw_circles_on_board(x_y_list, color=(0, 0, 255), radius=2)
-            board = pointer.connect_circles(x_y_list, color=(255, 255, 255), board=board, special_mouth=True,do_not_connect_lasts=["jaw", "nose", "mouth"])
-            board, (right_mean, left_mean) = pointer.find_eyes_center(x_y_list, color=(255, 255, 255), board=board)
-            board2 = pointer.special_connector(x_y_list, color=(255, 255, 255),board=pointer.show_image(justret=True).copy())
+                board = pointer.draw_circles_on_board(x_y_list, color=(0, 0, 255), radius=2)
+                board = pointer.connect_circles(x_y_list, color=(255, 255, 255), board=board, special_mouth=True,do_not_connect_lasts=["jaw", "nose", "mouth"])
+                board, (right_mean, left_mean) = pointer.find_eyes_center(x_y_list, color=(255, 255, 255), board=board)
+                board2 = pointer.special_connector(x_y_list, color=(255, 255, 255),board=pointer.show_image(justret=True).copy())
 
-            img = pointer.show_image(justret=True)
+                img = pointer.show_image(justret=True)
 
-            cv2.imshow("board",board)
-            cv2.imshow("board2",board2)
-            cv2.imshow("img",img)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+                cv2.imshow("board",board)
+                cv2.imshow("board2",board2)
+                cv2.imshow("img",img)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
 
     def on_cam(cam_n = 0,flip = True):
 
