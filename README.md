@@ -16,5 +16,5 @@ If you downloaded [shape_predictor_68_face_landmarks.dat](https://github.com/AKS
 ![GIF](https://media.giphy.com/media/8TtiAEeAFGJm7eLK5i/giphy.gif)
 ![GIF](https://media.giphy.com/media/pjmH0VXZmX5FNOeUBl/giphy.gif)
 
-If you have any question, don't be shame to ask.
+If you have any question, don't shame to ask.
 
