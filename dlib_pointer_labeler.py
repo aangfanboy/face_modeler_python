@@ -374,7 +374,7 @@ if __name__ == '__main__':
 
                 if len(x_y_list) != 1:
                     board = pointer.draw_circles_on_board(x_y_list, color=(0, 0, 255), radius=2)
-                    board = pointer.connect_circles(x_y_list, color=(255, 255, 255), board=board, special_mouth=True,do_not_connect_lasts=["jaw", "nose", "mouth"])
+                    board = pointer.connect_circles(x_y_list, color=(255, 255, 255), board=board, special_mouth=True,do_not_connect_lasts=["jaw", "nose", "mouth","left_eyebrow","right_eyebrow"])
                     board, (right_mean, left_mean) = pointer.find_eyes_center(x_y_list, color=(255, 255, 255), board=board)
                     board2 = pointer.special_connector(x_y_list, color=(255, 255, 255),board=pointer.show_image(justret=True).copy())
 
@@ -401,7 +401,7 @@ if __name__ == '__main__':
             if len(x_y_list) != 1:
 
                 board = pointer.draw_circles_on_board(x_y_list,color=(0,0,255),radius=2)
-                board = pointer.connect_circles(x_y_list, color=(255, 255, 255), board=board, special_mouth=True,do_not_connect_lasts=["jaw", "nose", "mouth"])
+                board = pointer.connect_circles(x_y_list, color=(255, 255, 255), board=board, special_mouth=True,do_not_connect_lasts=["jaw", "nose", "mouth","left_eyebrow","right_eyebrow"])
                 board,(right_mean,left_mean) = pointer.find_eyes_center(x_y_list, color=(255, 255, 255),board=board)
                 board2 = pointer.special_connector(x_y_list, color=(255, 255, 255), board=pointer.show_image(justret=True).copy())
 
