@@ -378,13 +378,13 @@ if __name__ == '__main__':
                     board, (right_mean, left_mean) = pointer.find_eyes_center(x_y_list, color=(255, 255, 255), board=board)
                     board2 = pointer.special_connector(x_y_list, color=(255, 255, 255),board=pointer.show_image(justret=True).copy())
 
-                img = pointer.show_image(justret=True)
+                    img = pointer.show_image(justret=True)
 
-                cv2.imshow("board",board)
-                cv2.imshow("board2",board2)
-                cv2.imshow("img",img)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+                    cv2.imshow("board",board)
+                    cv2.imshow("board2",board2)
+                    cv2.imshow("img",img)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
 
     def on_cam(cam_n = 0,flip = True):
 
