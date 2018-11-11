@@ -2,7 +2,7 @@
 
 # What is it works?
 
-It is a Python script that able to mark human face's and draw lines on it. With this, you can develop face recognition algorithms.
+It is a Python script that able to mark human face's and draw lines on it. And program can detect human's mouth is open or close, human's eye is open or close and detect is human smiling or not. With this, you can develop face recognition algorithms.
 
 # What I need to use?
 
