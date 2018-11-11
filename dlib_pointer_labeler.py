@@ -5,11 +5,17 @@ import imutils
 import numpy as np
 
 from imutils import face_utils
+from scipy.spatial import distance as dist
 
 class dlib_pointer:
     def __init__(self,shape_predictor_path = "shape_predictor_68_face_landmarks.dat"):
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor(shape_predictor_path)
+
+    def euclidean_finder(self,a,b):
+        A = dist.euclidean(a, b)
+
+        return A
 
     def x_y_lister2(self,x_y_list):
         lst = []
@@ -61,15 +67,15 @@ class dlib_pointer:
             if name == "jaw":
                 jaw_l.append((index, (x, y)))
 
-        if len(lst) == 0:
-            indexs.append(mouth_l)
-            indexs.append(right_eyebrow_l)
-            indexs.append(left_eyebrow_l)
-            indexs.append(right_eye_l)
-            indexs.append(left_eye_l)
-            indexs.append(nose_l)
-            indexs.append(jaw_l)
-            lst.append(indexs)
+
+        indexs.append(mouth_l)
+        indexs.append(right_eyebrow_l)
+        indexs.append(left_eyebrow_l)
+        indexs.append(right_eye_l)
+        indexs.append(left_eye_l)
+        indexs.append(nose_l)
+        indexs.append(jaw_l)
+        lst.append(indexs)
 
         return lst
 
@@ -277,6 +283,16 @@ class dlib_pointer:
                                 cv2.circle(board, x_y_list2[int(index)][5][8][1], radius, color, thickness)
                                 cv2.circle(board, x_y_list2[int(index)][5][4][1], radius, color, thickness)
 
+                        if name == "nose" and q == 4:
+                            cv2.line(board, (x, y), x_y_list2[int(index)][0][0][1], (255, 0, 150), thickness)#burunun kenarı ile
+                            if draw_points:
+                                cv2.circle(board, (x, y), radius, color, thickness)
+
+                        if name == "nose" and q == 8:
+                            cv2.line(board, (x, y), x_y_list2[int(index)][0][6][1], (255, 0, 150), thickness)#burunun kenarı ile
+                            if draw_points:
+                                cv2.circle(board, (x, y), radius, color, thickness)
+
                         if name == "mouth" and q == 0:
                             cv2.line(board, (x, y), x_y_list2[int(index)][6][4][1], (255, 0, 150), thickness)#jaw ile
                             cv2.line(board, (x, y), x_y_list2[int(index)][6][8][1], (255, 0, 150), thickness)#jawın ortası ile
@@ -360,6 +376,129 @@ class dlib_pointer:
 
         return self.image
 
+    def find_open_mouth(self,x_y_list,on_board = None,hold = 1):
+        lst = self.x_y_lister2(x_y_list)
+
+        mouths = []
+
+        for ind in lst:
+            euc = self.euclidean_finder(ind[0][14][1],ind[0][18][1])
+            euc2 = self.euclidean_finder(ind[0][3][1],ind[0][4][1])
+
+            rate = round(euc2/euc,3)
+            smile = False
+            if rate <= hold:
+                smile = True
+
+            try:
+                if on_board != None:
+                    cv2.putText(on_board, str(smile), (ind[0][0][1][0], ind[0][14][1][1]),cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 0, 255), 1)
+            except:
+                cv2.putText(on_board, str(smile), (ind[0][0][1][0],ind[0][14][1][1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 0, 255), 1)
+
+                mouths.append([smile,rate])
+
+        return mouths
+
+    def find_open_eye(self,x_y_list,on_board = None,hold = 1.75):
+        lst = self.x_y_lister2(x_y_list)
+
+        eyes = []
+
+        for ind in lst:
+            open = True
+            euc = self.euclidean_finder(ind[3][1][1],ind[3][5][1])
+            euc2 = self.euclidean_finder(ind[3][1][1],ind[3][2][1])
+
+            rate = round(euc2/euc,3)
+            if rate > hold:
+                open = False
+
+            euc = self.euclidean_finder(ind[4][1][1],ind[4][5][1])
+            euc2 = self.euclidean_finder(ind[4][1][1],ind[4][2][1])
+
+            rate = round(euc2/euc,3)
+
+            if rate > hold:
+                open = False
+
+            eyes.append([open,rate])
+            try:
+                if on_board != None:
+                    cv2.putText(on_board, str(open), (ind[3][0][1][0], ind[3][6][1][1]),cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 0, 255), 1)
+            except:
+                cv2.putText(on_board, str(open), (ind[3][0][1][0],ind[3][0][1][1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 0, 255), 1)
+
+        return eyes
+
+    def find_smile(self,x_y_list,hold = 7.5):
+        lst = self.x_y_lister2(x_y_list)
+
+        smiles = []
+
+        for ind in lst:
+            # cv2.circle(board, ind[5][4][1], 3, (255,0,255), 2)
+            # cv2.circle(board, ind[0][0][1], 3, (255,0,255), 2)
+
+            euc = self.euclidean_finder(ind[5][4][1],ind[0][0][1])
+            euc2 = self.euclidean_finder(ind[5][8][1], ind[0][6][1])
+            euc3 = self.euclidean_finder(ind[0][0][1], ind[0][6][1])
+
+            son = False
+            diff = round(euc+euc2,2) - round(euc3,2)
+            if diff <= hold:
+                son = True
+
+            smiles.append([son,diff])
+
+        return smiles
+
+    def evaluate(self,mouths,eyes_o,smiles):
+        last = ""
+        for i,(mouth,eye,smile) in enumerate(zip(mouths,eyes_o,smiles)):
+            moutht = "close"
+            if mouth[0]:
+                moutht = "open"
+
+            eyet = "close"
+            if eye[0]:
+                eyet = "open"
+
+            smilet = False
+            if smile[0]:
+                smilet = True
+
+            last += f"In {i}. face, mouth is {moutht}, eye is {eyet}, is human smile = {smilet} -- "
+
+        last = last.strip()
+        last = last.strip(" --")
+
+        return last
+
+    def make_it_straight(self,x_y_list,board = None,face_fhandle = 0,set_as_image = True):
+        try:
+            if board == None:
+                board = np.ones_like(self.image)
+        except Exception as e:
+            print(e)
+            pass
+
+        eyes = []
+        lst = self.x_y_lister2(x_y_list)
+
+        for i,ind in enumerate(lst):
+            if i == face_fhandle:
+                euc = (ind[3][3][1][1]-ind[4][0][1][1])
+
+                rows, cols, _ = self.image.shape
+                M = cv2.getRotationMatrix2D((cols / 2, rows / 2), 360-int(euc), 1)
+                converted_image = cv2.warpAffine(self.image, M, (cols, rows))
+
+        if set_as_image:
+            self.image = converted_image
+
+        return converted_image
+
 if __name__ == '__main__':
     PATH = r"images"
     pointer = dlib_pointer()
@@ -370,21 +509,29 @@ if __name__ == '__main__':
                 path_img = os.path.join(PATH,img)
                 pointer.set_image(path_img,width=500)
 
-                roi_list, shape_list, x_y_list = pointer.mark_points(draw_on_img=True)
+                roi_list, shape_list, x_y_list = pointer.mark_points(draw_on_img=False)
 
                 if len(x_y_list) != 1:
-                    board = pointer.draw_circles_on_board(x_y_list, color=(0, 0, 255), radius=2)
-                    board = pointer.connect_circles(x_y_list, color=(255, 255, 255), board=board, special_mouth=True,do_not_connect_lasts=["jaw", "nose", "mouth","left_eyebrow","right_eyebrow"])
-                    board, (right_mean, left_mean) = pointer.find_eyes_center(x_y_list, color=(255, 255, 255), board=board)
-                    board2 = pointer.special_connector(x_y_list, color=(255, 255, 255),board=pointer.show_image(justret=True).copy())
+                    pointer.make_it_straight(x_y_list)
+                    roi_list, shape_list, x_y_list = pointer.mark_points(draw_on_img=False)
+                    if len(x_y_list) != 1:
 
-                    img = pointer.show_image(justret=True)
+                        board = pointer.draw_circles_on_board(x_y_list, color=(0, 0, 255), radius=2)
+                        board = pointer.connect_circles(x_y_list, color=(255, 255, 255), board=board, special_mouth=True,do_not_connect_lasts=["jaw", "nose", "mouth","left_eyebrow","right_eyebrow"])
+                        board, (right_mean, left_mean) = pointer.find_eyes_center(x_y_list, color=(255, 255, 255), board=board)
+                        board2 = pointer.special_connector(x_y_list, color=(255, 255, 255),board=pointer.show_image(justret=True).copy())
+                        mouths = pointer.find_open_mouth(x_y_list,board,hold=1)
+                        eyes_o = pointer.find_open_eye(x_y_list,board,hold=1.75)
+                        smiles = pointer.find_smile(x_y_list,hold=5)
+                        evaluate_of_face = pointer.evaluate(mouths, eyes_o,smiles)
+                        print(evaluate_of_face)
+                        img = pointer.show_image(justret=True)
 
-                    cv2.imshow("board",board)
-                    cv2.imshow("board2",board2)
-                    cv2.imshow("img",img)
-                    cv2.waitKey(0)
-                    cv2.destroyAllWindows()
+                        cv2.imshow("board",board)
+                        cv2.imshow("board2",board2)
+                        cv2.imshow("img",img)
+                        cv2.waitKey(0)
+                        cv2.destroyAllWindows()
 
     def on_cam(cam_n = 0,flip = True):
 
@@ -398,15 +545,24 @@ if __name__ == '__main__':
             pointer.set_image(frame)
 
             roi_list, shape_list, x_y_list = pointer.mark_points(draw_on_img=False)
+
             if len(x_y_list) != 1:
+                pointer.make_it_straight(x_y_list)
+                roi_list, shape_list, x_y_list = pointer.mark_points(draw_on_img=False)
+                if len(x_y_list) != 1:
 
-                board = pointer.draw_circles_on_board(x_y_list,color=(0,0,255),radius=2)
-                board = pointer.connect_circles(x_y_list, color=(255, 255, 255), board=board, special_mouth=True,do_not_connect_lasts=["jaw", "nose", "mouth","left_eyebrow","right_eyebrow"])
-                board,(right_mean,left_mean) = pointer.find_eyes_center(x_y_list, color=(255, 255, 255),board=board)
-                board2 = pointer.special_connector(x_y_list, color=(255, 255, 255), board=pointer.show_image(justret=True).copy())
+                    board = pointer.draw_circles_on_board(x_y_list,color=(0,0,255),radius=2)
+                    board = pointer.connect_circles(x_y_list, color=(255, 255, 255), board=board, special_mouth=True,do_not_connect_lasts=["jaw", "nose", "mouth","left_eyebrow","right_eyebrow"])
+                    board,(right_mean,left_mean) = pointer.find_eyes_center(x_y_list, color=(255, 255, 255),board=board)
+                    board2 = pointer.special_connector(x_y_list, color=(255, 255, 255), board=pointer.show_image(justret=True).copy())
+                    mouths = pointer.find_open_mouth(x_y_list,on_board = board,hold=2.75)
+                    eyes_o = pointer.find_open_eye(x_y_list, board,hold=1.25)
+                    smiles = pointer.find_smile(x_y_list, hold=5)
+                    evaluate_of_face = pointer.evaluate(mouths, eyes_o,smiles)
+                    print(evaluate_of_face)
 
-                cv2.imshow("board",board)
-                cv2.imshow("board2",board2)
+                    cv2.imshow("board",board)
+                    cv2.imshow("board2",board2)
 
             cv2.imshow("frame",frame)
 
@@ -419,30 +575,3 @@ if __name__ == '__main__':
 
     on_path(PATH)
     #on_cam()
-
-"""
-
-HOW I CAN USE LISTS NAMED 'roi_list, shape_list, x_y_list' ?
- --------------------------------------------------------
-
-roi_list, shape_list, x_y_list = pointer.mark_points(draw_on_img=False)
-
-image = pointer.show_image(justret=True)
-        
-for (index,(name,(x,y))) in x_y_list:
-    cv2.circle(image, (x, y), 1, (0, 0, 255), -1)
-
-for (index,(name,roi)) in roi_list:
-    roi = imutils.resize(roi,width=500)
-    cv2.imshow(name + str(index),roi)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-for (index,shape) in shape_list:
-    image = face_utils.visualize_facial_landmarks(image, shape)
-
-cv2.imshow("output",image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-"""
